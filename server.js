@@ -37,10 +37,20 @@ connection.connect(function(err) {
 // sqlQueries.getEmployeesByRole(role, connection);
 // sqlQueries.displayTable(connection);
 
-//  inserts a new department
-const new_dept = "Inventory Control";
-sqlInserts.insertDepartment(new_dept, connection);
-console.log("\n Inserted a new department: " + new_dept + ".");
+// //  inserts a new department
+// const new_dept = "Inventory Control";
+// sqlInserts.insertDepartment(new_dept, connection);
+// console.log("\n Inserted a new department: " + new_dept + ".");
+
+//  inserts a new role
+const new_role = {
+  title: "Staff Programmer",
+  salary: 120000,
+  dept_id: "Systems"
+};
+sqlInserts.insertRole(new_role, connection);
+
+
 
 // ends the connection to the db
-connection.end();
+// connection.end();
