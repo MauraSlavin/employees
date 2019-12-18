@@ -44,6 +44,19 @@ function getEmployeesByDept(department, connection) {
 
 }
 
+function getEmployeesByRole(role, connection) {
+  // get all employees
+  getAllEmployees(connection);
+
+  // delete all employees except those in the given department
+  query = "DELETE FROM allemployees WHERE title <> ?;";
+  connection.query(query, role, function(err, res) {
+    if (err) throw err;
+  });
+
+}
+
+
 function displayTable(connection) {
   // select table data to send to CDL
   let query = "SELECT * FROM allemployees;";
@@ -57,4 +70,5 @@ function displayTable(connection) {
 
 exports.getAllEmployees = getAllEmployees;
 exports.getEmployeesByDept = getEmployeesByDept;
+exports.getEmployeesByRole = getEmployeesByRole;
 exports.displayTable = displayTable;

@@ -18,15 +18,22 @@ connection.connect(function(err) {
 });
 
 
-
 //   displays table of all employees to the CD
-sqlQueries.getAllEmployees(connection);
-sqlQueries.displayTable(connection);
-//  displays table of employees in a given dept
-const dept = "Manufacturing systems";
-// const dept = "Warehouse systems";
-sqlQueries.getEmployeesByDept(dept, connection);
-sqlQueries.displayTable(connection);
+// console.log("\n View All Employees:");
+// sqlQueries.getAllEmployees(connection);
+// sqlQueries.displayTable(connection);
 
+//  displays table of employees in a given dept
+// console.log("\n View Employees in a given Dept:");
+// const dept = "Manufacturing systems";
+// // const dept = "Warehouse systems";
+// sqlQueries.getEmployeesByDept(dept, connection);
+// sqlQueries.displayTable(connection);
+
+//  displays table of employees in a given role;
+console.log("\n View Employees in a given Role:");
+const role = "Programmer";
+sqlQueries.getEmployeesByRole(role, connection);
+sqlQueries.displayTable(connection);
 // ends the connection to the db
 connection.end();
