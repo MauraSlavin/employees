@@ -19,10 +19,10 @@ connection.connect(function(err) {
 });
 
 
-//   displays table of all employees to the CD
-// console.log("\n View All Employees:");
-// sqlQueries.getAllEmployees(connection);
-// sqlQueries.displayTable(connection);
+ // displays table of all employees to the CDL
+console.log("\n View All Employees:");
+sqlQueries.getAllEmployees(connection);
+sqlQueries.displayTable(connection);
 
 //  displays table of employees in a given dept
 // console.log("\n View Employees in a given Dept:");
@@ -43,12 +43,22 @@ connection.connect(function(err) {
 // console.log("\n Inserted a new department: " + new_dept + ".");
 
 //  inserts a new role
-const new_role = {
-  title: "Staff Programmer",
-  salary: 120000,
-  dept_id: "Systems"
-};
-sqlInserts.insertRole(new_role, connection);
+// const new_role = {
+//   title: "Staff Programmer",
+//   salary: 120000,
+//   dept_id: "Systems"
+// };
+// sqlInserts.insertRole(new_role, connection);
+
+// inserts a new employee
+// const employee_input_obj = {
+//   first_name: "Danielle",
+//   last_name: "Slavin", 
+//   role_name: "manager",
+//   manager_first: "Emil",
+//   manager_last: "Pignetti"
+// };
+// sqlInserts.insertEmployee(employee_input_obj, connection);
 
 
 
