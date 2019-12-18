@@ -4,14 +4,15 @@ USE employeedb;
 
 CREATE TABLE departments (
 id INT PRIMARY KEY AUTO_INCREMENT,
-department_name VARCHAR(30) NOT NULL);
+department_name VARCHAR(30) NOT NULL UNIQUE);
 
 CREATE TABLE roles (
 id INT PRIMARY KEY AUTO_INCREMENT,
 title VARCHAR(30) NOT NULL,
 salary DECIMAL(10,2) NOT NULL,
 dept_id INT,
-CONSTRAINT fk_roles_dept_id FOREIGN KEY (dept_id) REFERENCES departments(id) ON DELETE SET NULL);
+CONSTRAINT fk_roles_dept_id FOREIGN KEY (dept_id) REFERENCES departments(id) ON DELETE SET NULL,
+UNIQUE KEY `uniq_title_dept` (`title`, `dept_id`));
 
 CREATE TABLE employees (
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -20,7 +21,8 @@ last_name VARCHAR(30) NOT NULL,
 role_id INT,
 manager_id INT,
 CONSTRAINT fk_employee_role_id FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL,
-CONSTRAINT fk_employee_mgr_id FOREIGN KEY (manager_id) REFERENCES employees(id) ON DELETE SET NULL);
+CONSTRAINT fk_employee_mgr_id FOREIGN KEY (manager_id) REFERENCES employees(id) ON DELETE SET NULL,
+UNIQUE KEY `unique_first_last` (`first_name`, `last_name`));
 
 INSERT INTO departments
 (department_name) 

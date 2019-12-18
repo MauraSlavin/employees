@@ -2,6 +2,7 @@
 const mysql = require("mysql");
 // to access my own modules
 const sqlQueries = require('./Develop/js/sqlQueries');
+const sqlInserts = require('./Develop/js/sqlInserts');
 
 // set up connection to db
 const connection = mysql.createConnection({
@@ -30,10 +31,16 @@ connection.connect(function(err) {
 // sqlQueries.getEmployeesByDept(dept, connection);
 // sqlQueries.displayTable(connection);
 
-//  displays table of employees in a given role;
-console.log("\n View Employees in a given Role:");
-const role = "Programmer";
-sqlQueries.getEmployeesByRole(role, connection);
-sqlQueries.displayTable(connection);
+// //  displays table of employees in a given role;
+// console.log("\n View Employees in a given Role:");
+// const role = "Programmer";
+// sqlQueries.getEmployeesByRole(role, connection);
+// sqlQueries.displayTable(connection);
+
+//  inserts a new department
+const new_dept = "Inventory Control";
+sqlInserts.insertDepartment(new_dept, connection);
+console.log("\n Inserted a new department: " + new_dept + ".");
+
 // ends the connection to the db
 connection.end();
