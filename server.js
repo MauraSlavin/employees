@@ -1,9 +1,25 @@
 // to access database
 const mysql = require("mysql");
+// need express to interact with the front end
+const express = require("express");
+// need path for filename paths
+const path = require("path");
+
 // to access my own modules
 const sqlQueries = require('./Develop/js/sqlQueries');
 const sqlInserts = require('./Develop/js/sqlInserts');
 const sqlUpdates = require('./Develop/js/sqlUpdates');
+
+// Tells node that we are creating an "express" server
+var app = express();
+// Sets an initial port. We"ll use this later in our listener
+var PORT = process.env.PORT || 8080;
+
+// Sets up the Express app to handle data parsing
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+// sets up the default directory to use in the html files
+app.use(express.static(path.join(__dirname, "Develop/public")));
 
 // set up connection to db
 const connection = mysql.createConnection({
@@ -62,12 +78,23 @@ connection.connect(function(err) {
 // sqlInserts.insertEmployee(employee_input_obj, connection);
 
 // update an employee's role
-const new_role = {
-  first_name: "Duane",
-  last_name: "Stewart",
-  role_name: "programmer"
-};
-sqlUpdates.updateEmployeeRole(new_role, connection);
+// const new_role = {
+//   first_name: "Duane",
+//   last_name: "Stewart",
+//   role_name: "programmer"
+// };
+// sqlUpdates.updateEmployeeRole(new_role, connection);
 
 // ends the connection to the db
 // connection.end();
+
+// If no matching route is found default to home
+app.get("*", function(req, res) {
+  res.sendFile(path.join(__dirname, "Develop/html/index.html"));
+});
+
+
+// start the server
+app.listen(PORT, function() {
+  console.log("App listening on PORT: " + PORT);
+});
