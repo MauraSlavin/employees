@@ -3,6 +3,7 @@ const mysql = require("mysql");
 // to access my own modules
 const sqlQueries = require('./Develop/js/sqlQueries');
 const sqlInserts = require('./Develop/js/sqlInserts');
+const sqlUpdates = require('./Develop/js/sqlUpdates');
 
 // set up connection to db
 const connection = mysql.createConnection({
@@ -20,9 +21,9 @@ connection.connect(function(err) {
 
 
  // displays table of all employees to the CDL
-console.log("\n View All Employees:");
-sqlQueries.getAllEmployees(connection);
-sqlQueries.displayTable(connection);
+// console.log("\n View All Employees:");
+// sqlQueries.getAllEmployees(connection);
+// sqlQueries.displayTable(connection);
 
 //  displays table of employees in a given dept
 // console.log("\n View Employees in a given Dept:");
@@ -60,7 +61,13 @@ sqlQueries.displayTable(connection);
 // };
 // sqlInserts.insertEmployee(employee_input_obj, connection);
 
-
+// update an employee's role
+const new_role = {
+  first_name: "Duane",
+  last_name: "Stewart",
+  role_name: "programmer"
+};
+sqlUpdates.updateEmployeeRole(new_role, connection);
 
 // ends the connection to the db
 // connection.end();
