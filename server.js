@@ -167,6 +167,15 @@ function whatToDo(connection) {
       name: "action",
       message: "What would you like to do?",
       choices: actionChoices
+    },
+    {
+      type: "list",
+      name: "displayByDept",
+      message: "Which department would you like to see?",
+      when: actionIs("View employees by department"),
+      choices: ["Systems", "Inventory Control"]
+      // choices: findDepts(connection);
+
     }
   ];
 
@@ -190,6 +199,15 @@ function whatToDo(connection) {
   });
 }
 // conversation.startConversation(connection);
+
+
+// returns true if the action passed in matches the action entered 
+//   to determine what action-specific question to ask & action to take
+function actionIs(action) {
+  return function(answers) {
+    return answers.action == action;
+  };
+}
 
 // Ask what to do
 whatToDo(connection);
