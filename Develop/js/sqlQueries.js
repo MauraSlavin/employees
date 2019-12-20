@@ -5,10 +5,29 @@ const cTable = require("console.table");
 
 function getAllEmployees(connection) {
   // clear out from old query to make sure we have current data
+  console.log("\nIn getAllEmployees"); // test
   let query = "DELETE FROM allemployees;";
-  connection.query(query, function(err, res) {
+  let err;
+  // console.log("connection:"); // test
+  // console.log(connection); // test
+  // open connection to db  (shouldn't need this...)
+  connection.connect(function(err) {
     if (err) throw err;
   });
+  connection.query(query, function(err, res) {
+    if (err) throw err;
+    console.log("err:"); // test
+    console.log(err); // test
+    console.log("res:"); // test
+    console.log(res); // test
+    console.log("allemployees emptied out"); // test
+  });
+  console.log("\nAfter delete query:"); // test
+  console.log("query:  " + query); // test
+  console.log("err: "); // test
+  console.log(err); // test
+  console.log("res"); // test
+  console.log(res); // test
 
   // get data from joining employees & rol
   query =
@@ -20,6 +39,7 @@ function getAllEmployees(connection) {
   query += " LEFT JOIN departments ON (departments.id = roles.dept_id);";
   connection.query(query, function(err, res) {
     if (err) throw err;
+    console.log("first INSERT done to get most of the info"); // test
   });
 
   // replace manager id number with the first and last name
@@ -28,8 +48,10 @@ function getAllEmployees(connection) {
   query += " WHERE a.manager = e.id;";
   connection.query(query, function(err, res) {
     if (err) throw err;
+    console.log(
+      "Second quiery done to update manager name.  Should have result in allemployees table, now."
+    ); // test
   });
-
 }
 
 function getEmployeesByDept(department, connection) {
@@ -41,7 +63,6 @@ function getEmployeesByDept(department, connection) {
   connection.query(query, department, function(err, res) {
     if (err) throw err;
   });
-
 }
 
 function getEmployeesByRole(role, connection) {
@@ -53,9 +74,7 @@ function getEmployeesByRole(role, connection) {
   connection.query(query, role, function(err, res) {
     if (err) throw err;
   });
-
 }
-
 
 function displayTable(connection) {
   // select table data to send to CDL
