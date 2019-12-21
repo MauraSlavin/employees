@@ -8,11 +8,10 @@ department_name VARCHAR(30) NOT NULL UNIQUE);
 
 CREATE TABLE roles (
 id INT PRIMARY KEY AUTO_INCREMENT,
-title VARCHAR(30) NOT NULL,
+title VARCHAR(30) NOT NULL UNIQUE,
 salary DECIMAL(10,2) NOT NULL,
 dept_id INT,
-CONSTRAINT fk_roles_dept_id FOREIGN KEY (dept_id) REFERENCES departments(id) ON DELETE SET NULL,
-UNIQUE KEY `uniq_title_dept` (`title`, `dept_id`));
+CONSTRAINT fk_roles_dept_id FOREIGN KEY (dept_id) REFERENCES departments(id) ON DELETE SET NULL);
 
 CREATE TABLE employees (
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -34,12 +33,12 @@ VALUES
 INSERT INTO roles
 (title, salary, dept_id)
 VALUES
-("manager", 100000.00, 1),
-("programmer", 50000.00, 1),
-("senior programmer", 70000, 1),
-("manager", 110000.00, 2),
-("programmer", 55000.00, 2),
-("senior programmer", 75000, 2),
+("WS manager", 100000.00, 1),
+("WS programmer", 50000.00, 1),
+("WS senior programmer", 70000, 1),
+("MS manager", 110000.00, 2),
+("MS programmer", 55000.00, 2),
+("MS senior programmer", 75000, 2),
 ("second line manager", 150000.00, 3);
 
 INSERT INTO employees 

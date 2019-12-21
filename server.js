@@ -57,7 +57,7 @@ function getAllEmployees() {
   connection.query(query, function(err, res) {
     if (err) throw err;
   });
-}
+} // end getallemployees
 
 function getEmployeesByDept(department) {
   // get all employees
@@ -68,7 +68,7 @@ function getEmployeesByDept(department) {
   connection.query(query, department, function(err, res) {
     if (err) throw err;
   });
-}
+} // end of getemployeesbydept
 
 function getEmployeesByMgr(mgr) {
   // get all employees
@@ -79,18 +79,17 @@ function getEmployeesByMgr(mgr) {
   connection.query(query, mgr, function(err, res) {
     if (err) throw err;
   });
-}
+} // end of getemployeesbymgr
 
 function displayTable() {
   // select table data to send to CLI
   let query = "SELECT * FROM allemployees;";
   connection.query(query, function(err, res) {
     if (err) throw err;
-
     // Sent stringified results to the CLI
     console.table(JSON.parse(JSON.stringify(res)));
   });
-}
+} // end of displaytable
 
 function insertEmployee(employee_input_obj) {
   // insert a new employee
@@ -168,11 +167,8 @@ function insertEmployee(employee_input_obj) {
   });
 }
 
-
-
 function deleteEmployee(emp_name) {
-
-  // delete given employees 
+  // delete given employees
   query = "DELETE FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?;";
   connection.query(query, emp_name, function(err, res) {
     if (err) throw err;
@@ -180,6 +176,36 @@ function deleteEmployee(emp_name) {
   });
 }
 
+function updateEmployeeRole(employee_name, new_role) {
+  // update an employee's role
+  // get the new role_id first
+  // should only be one, but just in case, it'll take the first
+  console.log("name: " + employee_name + "   new role:  " + new_role);
+  query = "SELECT id FROM roles WHERE title = ? LIMIT 1;";
+  connection.query(query, new_role, function(err, res) {
+    if (err) throw err;
+    let new_role_id = JSON.parse(JSON.stringify(res));
+    new_role_id = new_role_id[0].id;
+    console.log("New role id:  " + new_role_id);
+    query =
+      "UPDATE employees SET role_id = ? WHERE CONCAT(first_name, ' ', last_name) = ?;";
+
+    connection.query(query, [new_role_id, employee_name], function(err, res) {
+      if (err) throw err;
+      console.log(
+        employee_name + "'s role has been updated to " + new_role + "."
+      );
+    });
+  });
+}
+
+// update an employee's role
+// const new_role = {
+//   first_name: "Duane",
+//   last_name: "Stewart",
+//   role_name: "programmer"
+// };
+// sqlUpdates.updateEmployeeRole(new_role, connection);
 
 // //  inserts a new department
 // const new_dept = "Inventory Control";
@@ -193,14 +219,6 @@ function deleteEmployee(emp_name) {
 //   dept_id: "Systems"
 // };
 // sqlInserts.insertRole(new_role, connection);
-
-// update an employee's role
-// const new_role = {
-//   first_name: "Duane",
-//   last_name: "Stewart",
-//   role_name: "programmer"
-// };
-// sqlUpdates.updateEmployeeRole(new_role, connection);
 
 function whatToDo() {
   // initial question choices - what can the user do?
@@ -298,10 +316,13 @@ function whatToDo() {
       when: actionIs("Add an employee"),
       // choices: roles        //  ******  this isn't returning the right thing, even though it looks the same ***** //
       choices: [
-        "programmer",
-        "manager",
-        "second line manager",
-        "senior programmer"
+        "WS programmer",
+        "WS manager",
+        "WS senior programmer",
+        "MS programmer",
+        "MS manager",
+        "MS senior programmer",
+        "second line manager"
       ]
     },
 
@@ -320,6 +341,42 @@ function whatToDo() {
         "Alyssa Quinn",
         "Duane Stewart",
         "A B"
+      ]
+    },
+
+    // Asks which employee, and the new role, if updating an employee's role
+    {
+      type: "list",
+      name: "updateEmpForRole",
+      message: "Which employee would you like to update the title for?",
+      when: actionIs("Update an employee's title"),
+      // choices: employeeList     //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      choices: [
+        "Maura Clifford",
+        "Mike Slavin",
+        "Jim Tyger",
+        "Emil Pignetti",
+        "Alyssa Quinn",
+        "Duane Stewart",
+        "A B"
+      ]
+    },
+
+    // Asks which employee, and the new role, if updating an employee's role
+    {
+      type: "list",
+      name: "updateEmpRole",
+      message: "What is the employee's new title?",
+      when: actionIs("Update an employee's title"),
+      // choices: roles        //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      choices: [
+        "WS programmer",
+        "WS manager",
+        "WS senior programmer",
+        "MS programmer",
+        "MS manager",
+        "MS senior programmer",
+        "second line manager"
       ]
     }
   ];
@@ -375,8 +432,9 @@ function whatToDo() {
         deleteEmployee(results.removeEmp);
         break;
 
-
-
+      case "Update an employee's title":
+        updateEmployeeRole(results.updateEmpForRole, results.updateEmpRole);
+        break;
 
         fault: console.log(
           "not all action choices accounted for - see inquirer.then in server.js"
