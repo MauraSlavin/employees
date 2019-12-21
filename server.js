@@ -180,32 +180,49 @@ function updateEmployeeRole(employee_name, new_role) {
   // update an employee's role
   // get the new role_id first
   // should only be one, but just in case, it'll take the first
-  console.log("name: " + employee_name + "   new role:  " + new_role);
   query = "SELECT id FROM roles WHERE title = ? LIMIT 1;";
   connection.query(query, new_role, function(err, res) {
     if (err) throw err;
     let new_role_id = JSON.parse(JSON.stringify(res));
     new_role_id = new_role_id[0].id;
-    console.log("New role id:  " + new_role_id);
+
     query =
       "UPDATE employees SET role_id = ? WHERE CONCAT(first_name, ' ', last_name) = ?;";
 
     connection.query(query, [new_role_id, employee_name], function(err, res) {
       if (err) throw err;
       console.log(
-        employee_name + "'s role has been updated to " + new_role + "."
+        employee_name + "'s job title has been updated to " + new_role + "."
       );
     });
   });
-}
+} // end of updateemployeerole
 
-// update an employee's role
-// const new_role = {
-//   first_name: "Duane",
-//   last_name: "Stewart",
-//   role_name: "programmer"
-// };
-// sqlUpdates.updateEmployeeRole(new_role, connection);
+
+function updateEmployeeMgr(employee_name, new_mgr) {
+  // update an employee's manager
+
+  // get the new manager_id first
+  // should only be one, but just in case, it'll take the first
+  query = "SELECT id FROM employees WHERE CONCAT(first_name, ' ', last_name) = ? LIMIT 1;";
+  connection.query(query, new_mgr, function(err, res) {
+    if (err) throw err;
+    let new_mgr_id = JSON.parse(JSON.stringify(res));
+    new_mgr_id = new_mgr_id[0].id;
+   
+    query =
+      "UPDATE employees SET manager_id = ? WHERE CONCAT(first_name, ' ', last_name) = ?;";
+
+    connection.query(query, [new_mgr_id, employee_name], function(err, res) {
+      if (err) throw err;
+      console.log(
+        employee_name + "'s manager has been updated to " + new_mgr + "."
+      );
+    });
+  });
+} // end of updateemployeemgr
+
+
 
 // //  inserts a new department
 // const new_dept = "Inventory Control";
@@ -252,6 +269,7 @@ function whatToDo() {
   const employeeList = findEmployees();
   console.log("(In whatToDo) employeeList:");
   console.log(employeeList);
+
 
   //   const whatToDo = () => {
   const questions = [
@@ -378,6 +396,38 @@ function whatToDo() {
         "MS senior programmer",
         "second line manager"
       ]
+    },
+
+        // Asks which employee is getting a new manager (when updating the employee's manager)
+    {
+      type: "list",
+      name: "updateEmpForNewMgr",
+      message: "Which employee is getting a new manager?",
+      when: actionIs("Update an employee's manager"),
+      // choices: employeeList     //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      choices: [
+        "Maura Clifford",
+        "Mike Slavin",
+        "Jim Tyger",
+        "Emil Pignetti",
+        "Alyssa Quinn",
+        "Duane Stewart",
+        "A B"
+      ]
+    }, 
+
+        // Asks who the new manager is (when updating the employee's manager)
+    {
+      type: "list",
+      name: "updateEmpNewMgr",
+      message: "Who is the new manager?",
+      when: actionIs("Update an employee's manager"),
+      // choices: mgrs     //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      choices: [
+        "Emil Pignetti",
+        "Jim Tyger",
+        "Duane Stewart"
+      ]
     }
   ];
 
@@ -434,6 +484,10 @@ function whatToDo() {
 
       case "Update an employee's title":
         updateEmployeeRole(results.updateEmpForRole, results.updateEmpRole);
+        break;
+      
+      case "Update an employee's manager":
+        updateEmployeeMgr(results.updateEmpForNewMgr, results.updateEmpNewMgr);
         break;
 
         fault: console.log(
@@ -586,6 +640,8 @@ async function findEmployees() {
     console.error(error);
   }
 } // end of findEmployees
+
+
 
 // Ask what to do
 whatToDo();
