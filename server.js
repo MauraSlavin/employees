@@ -2,10 +2,10 @@
 const mysql = require("mysql");
 // need path for filename paths
 const path = require("path");
-// to allow console.log-ing a table to the CDL
+// to allow console.log-ing a table to the CLI
 const cTable = require("console.table");
 
-// need express to have a conversation with the user on the CDL
+// need express to have a conversation with the user on the CLI
 const inquirer = require("inquirer");
 
 // to access my own modules
@@ -28,18 +28,13 @@ connection.connect(function(err) {
   if (err) throw err;
 });
 
-function getAllEmployees(connection) {
+function getAllEmployees() {
   // clear out from old query to make sure we have current data
   let query = "DELETE FROM allemployees;";
-  let err;
-  // console.log("connection:"); // test
-  // console.log(connection); // test
 
   connection.query(query, function(err, res) {
     if (err) throw err;
-
   });
-
 
   // get data from joining employees & rol
   query =
@@ -58,15 +53,15 @@ function getAllEmployees(connection) {
   query = "UPDATE allemployees a, employees e";
   query += " SET a.manager = CONCAT(e.first_name, ' ', e.last_name)";
   query += " WHERE a.manager = e.id;";
- 
+
   connection.query(query, function(err, res) {
     if (err) throw err;
   });
 }
 
-function getEmployeesByDept(department, connection) {
+function getEmployeesByDept(department) {
   // get all employees
-  getAllEmployees(connection);
+  getAllEmployees();
 
   // delete all employees except those in the given department
   query = "DELETE FROM allemployees WHERE dept <> ?;";
@@ -75,9 +70,9 @@ function getEmployeesByDept(department, connection) {
   });
 }
 
-function getEmployeesByRole(role, connection) {
+function getEmployeesByRole(role) {
   // get all employees
-  getAllEmployees(connection);
+  getAllEmployees();
 
   // delete all employees except those in the given department
   query = "DELETE FROM allemployees WHERE title <> ?;";
@@ -86,28 +81,16 @@ function getEmployeesByRole(role, connection) {
   });
 }
 
-function displayTable(connection) {
-  // select table data to send to CDL
+function displayTable() {
+  // select table data to send to CLI
   let query = "SELECT * FROM allemployees;";
   connection.query(query, function(err, res) {
     if (err) throw err;
 
-    // Sent stringified results to the CDL
+    // Sent stringified results to the CLI
     console.table(JSON.parse(JSON.stringify(res)));
   });
 }
-
-// // displays table of all employees to the CDL
-// console.log("\n View All Employees:");
-// sqlQueries.getAllEmployees(connection);
-// sqlQueries.displayTable(connection);
-
-//  displays table of employees in a given dept
-// console.log("\n View Employees in a given Dept:");
-// const dept = "Manufacturing systems";
-// // const dept = "Warehouse systems";
-// sqlQueries.getEmployeesByDept(dept, connection);
-// sqlQueries.displayTable(connection);
 
 // //  displays table of employees in a given role;
 // console.log("\n View Employees in a given Role:");
@@ -146,7 +129,7 @@ function displayTable(connection) {
 // };
 // sqlUpdates.updateEmployeeRole(new_role, connection);
 
-function whatToDo(connection) {
+function whatToDo() {
   // initial question choices - what can the user do?
   const actionChoices = [
     "View all employees",
@@ -156,8 +139,13 @@ function whatToDo(connection) {
     "Remove an employee",
     "Update an employee's title",
     "Update an employee's manager",
-    "End application"
+    "Exit"
   ];
+
+  // get list of depts for "View employees by dept"
+  const depts = findDepts();
+  console.log("(In whatToDo) depts:");
+  console.log(depts);
 
   //   const whatToDo = () => {
   const questions = [
@@ -168,27 +156,39 @@ function whatToDo(connection) {
       message: "What would you like to do?",
       choices: actionChoices
     },
+    // findDepts returns array of strings,
+    //   where each string has a dept_id & dept_name, so user can see name, and we can use id
     {
       type: "list",
-      name: "displayByDept",
+      name: "dept",
       message: "Which department would you like to see?",
       when: actionIs("View employees by department"),
-      choices: ["Systems", "Inventory Control"]
-      // choices: findDepts(connection);
-
+      // choices: depts
+      choices: ['Warehouse Systems', 'Manufacturing Systems', 'Systems']
     }
   ];
 
-  inquirer.prompt(questions).then(val => {
+  inquirer.prompt(questions).then(results => {
     // follow up questions based on inital answer...
-
-    if (val.action == "View all employees") {
-      getAllEmployees(connection);
-      // sqlQueries.getAllEmployees(connection);
-       // sqlQueries.displayTable(connection);
-      displayTable(connection);
+    switch (results.action) {
+      case "View all employees":
+        getAllEmployees();
+        // sqlQueries.getAllEmployees(connection);
+        // sqlQueries.displayTable(connection);
+        displayTable();
+        break;
       // action = whatToDo();   // commented out for testing... put back in to reiterate application
-    }
+      case "View employees by department":
+        console.log("results.dept:");
+        console.log(results.dept);
+
+        getEmployeesByDept(results.dept);
+        displayTable();
+        break;
+        fault: console.log(
+          "not all action choices accounted for - see inquirer.then in server.js"
+        );
+    } // end of switch stmt
 
     // If the user says yes to another game, play again, otherwise quit the game
     // if (val.choice) {
@@ -196,12 +196,11 @@ function whatToDo(connection) {
     // } else {
     //   this.quit();
     // }
-  });
+  }); // end of .then block
 }
 // conversation.startConversation(connection);
 
-
-// returns true if the action passed in matches the action entered 
+// returns true if the action passed in matches the action entered
 //   to determine what action-specific question to ask & action to take
 function actionIs(action) {
   return function(answers) {
@@ -209,8 +208,41 @@ function actionIs(action) {
   };
 }
 
+// returns an array of strings, where each string has a dept id and dept name
+async function findDepts() {
+
+
+  const query = "SELECT department_name FROM departments;";
+  try {
+    await connection.query(query, function(err, res) {
+      if (err) throw err;
+      // res.forEach(id => {
+      console.log("res");
+      console.log(res);
+      depts = JSON.parse(JSON.stringify(res));
+      console.log("depts:");
+      console.log(depts);
+      let newDepts = [];
+      depts.forEach(function(convert) {
+        newDepts.push(convert["department_name"]);
+      });
+      console.log("newdepts:");
+      console.log(newDepts);
+
+      return newDepts;
+    });
+  } catch (error) {
+    console.error(error);
+  }
+  // select table departments to get list of depts
+}  // end of findDepts
+
+
+
+
+
 // Ask what to do
-whatToDo(connection);
+whatToDo();
 // console.log("action:  ", action);
 
 // ends the connection to the db

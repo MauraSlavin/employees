@@ -1,4 +1,4 @@
-// // need express to have a conversation with the user on the CDL
+// // need express to have a conversation with the user on the CLI
 // const inquirer = require("inquirer");
 
 // // for inquirer
