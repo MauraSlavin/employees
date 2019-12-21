@@ -142,10 +142,15 @@ function whatToDo() {
   console.log("(In whatToDo) depts:");
   console.log(depts);
 
-  // get list of managers for "View employees by manager"
+  // get list of managers for "View employees by manager" & "Add a new employee"
   const mgrs = findMgrs();
   console.log("(In whatToDo) mgrs:");
   console.log(mgrs);
+
+  // get list of roles (titles) for "Add a new employee"
+  const roles = findRoles();
+  console.log("(In whatToDo) roles:");
+  console.log(roles);
 
   //   const whatToDo = () => {
   const questions = [
@@ -174,6 +179,42 @@ function whatToDo() {
       when: actionIs("View employees by manager"),
       // choices: mgrs
       choices: ["Emil Pignetti", "Duane Stewart", "Jim Tyger"]
+    },
+
+    // Asks employee first name, if adding an employee
+    {
+      type: "input",
+      name: "addFirst",
+      message: "What is the employee's first name?",
+      when: actionIs("Add an employee"),
+    },
+
+    // Asks employee last name, if adding an employee
+    {
+      type: "input",
+      name: "addLast",
+      message: "What is the employee's last name?",
+      when: actionIs("Add an employee"),
+    },
+
+    // Asks which mgr, if adding an employee
+    {
+      type: "list",
+      name: "addMgr",
+      message: "Which manager will this employee be working for?",
+      when: actionIs("Add an employee"),
+      // choices: mgrs
+      choices: ["Emil Pignetti", "Duane Stewart", "Jim Tyger"]
+    },
+
+    // Asks which role, if adding an employee
+    {
+      type: "list",
+      name: "addRole",
+      message: "What will be this new employee's title?",
+      when: actionIs("Add an employee"),
+      // choices: roles
+      choices: ["programmer", "manager", "second line manager", "senior programmer"]
     }
   ];
 
@@ -257,7 +298,7 @@ async function findDepts() {
 }  // end of findDepts
 
 
-// returns an array of strings, where each string has a dept id and dept name
+// returns an array of strings, where each string has a manager name
 async function findMgrs() {
 
   let query = "SELECT DISTINCT";
@@ -285,8 +326,37 @@ async function findMgrs() {
   } catch (error) {
     console.error(error);
   }
-  // select table departments to get list of depts
-}  // end of findDepts
+
+}  // end of findMgrs
+
+
+
+
+// returns an array of strings, where each string has role (or title) name
+async function findRoles() {
+
+  let query = "SELECT DISTINCT title FROM roles;";
+  try {
+    await connection.query(query, function(err, res) {
+      if (err) throw err;
+
+      const roles = JSON.parse(JSON.stringify(res));
+      console.log("roles:");
+      console.log(roles);
+      let newRoles = [];
+      roles.forEach(function(convert) {
+        newRoles.push(convert["title"]);
+      });
+      console.log("newRoles:");
+      console.log(newRoles);
+
+      return newRoles;
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+}  // end of findRoles
 
 
 
