@@ -93,6 +93,85 @@ function displayTable() {
 }
 
 
+function insertEmployee(employee_input_obj) {
+  // insert a new role
+
+  // find the dept_id from the name and replace it in the object.
+  const {
+    first_name,
+    last_name,
+    role_name,
+    manager_first,
+    manager_last
+  } = employee_input_obj;
+
+  // need to create object with data needed to insert into the employees table
+  let employee_insert_obj = {
+    first_name: first_name,
+    last_name: last_name,
+    role_id: null, // to be retrieved from roles table based on role title
+    manager_id: null // to be retrieved from the employees table from the manager name
+  };
+
+  // use this object to do the SQL SELECT query (to get the role id for the job title)
+  const role_obj = {
+    title: role_name
+  };
+
+  // get the dept id from the departments table using the department name object
+  let query = "SELECT id FROM roles WHERE ?";
+  connection.query(query, role_obj, function(err, res) {
+    if (err) throw err;
+    // get the id from the res (result)
+    let role_id = JSON.parse(JSON.stringify(res));
+    role_id = role_id[0].id;
+    // replace the name in the role object to be inserted with the dept_id
+    employee_insert_obj.role_id = role_id;
+
+    // use this object to do the SQL SELECT query (to get the employee id for the manager)
+    const mgr_obj_first = {
+      first_name: manager_first,
+    };
+
+    const mgr_obj_last = {
+      last_name: manager_last
+    };
+
+    const mgr_objs = [
+        mgr_obj_first,
+        mgr_obj_last
+    ];
+
+    // get the dept id from the departments table using the department name object
+    let query = "SELECT id FROM employees WHERE ? AND ?;";
+    console.log("Query:" + query); // for testing
+    console.log("mgr_obj:"); // for testing
+    console.log(mgr_objs);  // for testing
+    connection.query(query, mgr_objs, function(err, res) {
+      if (err) throw err;
+      // get the id from the res (result)
+      let mgr_id = JSON.parse(JSON.stringify(res));
+      mgr_id = mgr_id[0].id;
+      // replace the name in the role object to be inserted with the dept_id
+      employee_insert_obj.manager_id = mgr_id;
+
+      // the object is now ready to be inserted in the table.
+      query = "INSERT INTO employees SET ?;";
+      connection.query(query, employee_insert_obj, function(err, res) {
+        if (err) throw err;
+      });
+
+      console.log(
+        "\nThe new employee " +
+          employee_insert_obj.first_name +
+          " " +
+          employee_insert_obj.last_name +
+          " has been successfully inserted."
+      );
+    });
+  });
+}
+
 // //  inserts a new department
 // const new_dept = "Inventory Control";
 // sqlInserts.insertDepartment(new_dept, connection);
@@ -105,16 +184,6 @@ function displayTable() {
 //   dept_id: "Systems"
 // };
 // sqlInserts.insertRole(new_role, connection);
-
-// inserts a new employee
-// const employee_input_obj = {
-//   first_name: "Danielle",
-//   last_name: "Slavin",
-//   role_name: "manager",
-//   manager_first: "Emil",
-//   manager_last: "Pignetti"
-// };
-// sqlInserts.insertEmployee(employee_input_obj, connection);
 
 // update an employee's role
 // const new_role = {
@@ -168,7 +237,7 @@ function whatToDo() {
       message: "Which department would you like to see?",
       when: actionIs("View employees by department"),
       // choices: depts
-      choices: ['Warehouse Systems', 'Manufacturing Systems', 'Systems']
+      choices: ["Warehouse Systems", "Manufacturing Systems", "Systems"]
     },
 
     // Asks which mgr, if viewing employees by dept
@@ -186,7 +255,7 @@ function whatToDo() {
       type: "input",
       name: "addFirst",
       message: "What is the employee's first name?",
-      when: actionIs("Add an employee"),
+      when: actionIs("Add an employee")
     },
 
     // Asks employee last name, if adding an employee
@@ -194,7 +263,7 @@ function whatToDo() {
       type: "input",
       name: "addLast",
       message: "What is the employee's last name?",
-      when: actionIs("Add an employee"),
+      when: actionIs("Add an employee")
     },
 
     // Asks which mgr, if adding an employee
@@ -214,7 +283,12 @@ function whatToDo() {
       message: "What will be this new employee's title?",
       when: actionIs("Add an employee"),
       // choices: roles
-      choices: ["programmer", "manager", "second line manager", "senior programmer"]
+      choices: [
+        "programmer",
+        "manager",
+        "second line manager",
+        "senior programmer"
+      ]
     }
   ];
 
@@ -245,6 +319,28 @@ function whatToDo() {
         displayTable();
         break;
 
+      // inserts a new employee
+      case "Add an employee":
+        // get the manager's first & last name from the name entered.
+        mgr_first_last = getMgrFirstLast(results.addMgr);
+        console.log("(case Add an employee) mgr_first_last:");
+        console.log(mgr_first_last);
+        // *******    Promise is pending.   WWWHHHYYY??  **********  //
+        // const {mgr_first, mgr_last} = mgr_first_last;
+        const mgr_first = "Jim";
+        const mgr_last = "Tyger";
+        const employee_input_obj = {
+          first_name: results.addFirst,
+          last_name: results.addLast,
+          role_name: results.addRole,
+          manager_first: mgr_first,
+          manager_last: mgr_last
+        };
+        insertEmployee(employee_input_obj);
+        break;
+
+
+
 
         fault: console.log(
           "not all action choices accounted for - see inquirer.then in server.js"
@@ -271,12 +367,11 @@ function actionIs(action) {
 
 // returns an array of strings, where each string is a dept name
 async function findDepts() {
-
   const query = "SELECT department_name FROM departments;";
   try {
     await connection.query(query, function(err, res) {
       if (err) throw err;
-   
+
       console.log("res");
       console.log(res);
       const depts = JSON.parse(JSON.stringify(res));
@@ -295,12 +390,10 @@ async function findDepts() {
     console.error(error);
   }
   // select table departments to get list of depts
-}  // end of findDepts
-
+} // end of findDepts
 
 // returns an array of strings, where each string has a manager name
 async function findMgrs() {
-
   let query = "SELECT DISTINCT";
   query += " CONCAT(m.first_name, ' ', m.last_name)";
   query += " AS mgr_name";
@@ -326,15 +419,10 @@ async function findMgrs() {
   } catch (error) {
     console.error(error);
   }
-
-}  // end of findMgrs
-
-
-
+} // end of findMgrs
 
 // returns an array of strings, where each string has role (or title) name
 async function findRoles() {
-
   let query = "SELECT DISTINCT title FROM roles;";
   try {
     await connection.query(query, function(err, res) {
@@ -355,10 +443,29 @@ async function findRoles() {
   } catch (error) {
     console.error(error);
   }
+} // end of findRoles
 
-}  // end of findRoles
 
+// returns an array with two string elements, the first name and the last name
+async function getMgrFirstLast(manager_full_name) {
+  const query = "SELECT first_name, last_name FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?;";
+  try {
+    await connection.query(query, manager_full_name, function(err, res) {
+      if (err) throw err;
 
+      console.log("res");
+      console.log(res);
+      const mgr_first_last = JSON.parse(JSON.stringify(res));
+      console.log("mgr_first_last:");
+      console.log(mgr_first_last[0]);
+      
+      return mgr_first_last[0];
+    });
+  } catch (error) {
+    console.error(error);
+  }
+  // select table departments to get list of depts
+} // end of findDepts
 
 
 
