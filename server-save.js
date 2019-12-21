@@ -93,9 +93,9 @@ function displayTable() {
 }
 
 function insertEmployee(employee_input_obj) {
-  // insert a new employee
+  // insert a new role
 
-  // deconstruct the data we have
+  // find the dept_id from the name and replace it in the object.
   const {
     first_name,
     last_name,
@@ -168,19 +168,6 @@ function insertEmployee(employee_input_obj) {
   });
 }
 
-
-
-function deleteEmployee(emp_name) {
-
-  // delete given employees 
-  query = "DELETE FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?;";
-  connection.query(query, emp_name, function(err, res) {
-    if (err) throw err;
-    console.log(emp_name + " was successfully deleted.");
-  });
-}
-
-
 // //  inserts a new department
 // const new_dept = "Inventory Control";
 // sqlInserts.insertDepartment(new_dept, connection);
@@ -250,7 +237,7 @@ function whatToDo() {
       name: "dept",
       message: "Which department would you like to see?",
       when: actionIs("View employees by department"),
-      // choices: depts         //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      // choices: depts
       choices: ["Warehouse Systems", "Manufacturing Systems", "Systems"]
     },
 
@@ -286,7 +273,7 @@ function whatToDo() {
       name: "addMgr",
       message: "Which manager will this employee be working for?",
       when: actionIs("Add an employee"),
-      // choices: mgrs          //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      // choices: mgrs
       choices: ["Emil Pignetti", "Duane Stewart", "Jim Tyger"]
     },
 
@@ -296,7 +283,7 @@ function whatToDo() {
       name: "addRole",
       message: "What will be this new employee's title?",
       when: actionIs("Add an employee"),
-      // choices: roles        //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      // choices: roles
       choices: [
         "programmer",
         "manager",
@@ -311,15 +298,14 @@ function whatToDo() {
       name: "removeEmp",
       message: "Which employee would you like to fire?",
       when: actionIs("Remove an employee"),
-      // choices: employeeList     //  ******  this isn't returning the right thing, even though it looks the same ***** //
+      // choices: employeeList
       choices: [
         "Maura Clifford",
         "Mike Slavin",
         "Jim Tyger",
         "Emil Pignetti",
         "Alyssa Quinn",
-        "Duane Stewart",
-        "A B"
+        "Duane Stewart"
       ]
     }
   ];
@@ -370,13 +356,6 @@ function whatToDo() {
         };
         insertEmployee(employee_input_obj);
         break;
-
-      case "Remove an employee":
-        deleteEmployee(results.removeEmp);
-        break;
-
-
-
 
         fault: console.log(
           "not all action choices accounted for - see inquirer.then in server.js"
@@ -522,7 +501,7 @@ async function findEmployees() {
       console.log("newEmps:");
       console.log(newEmps);
 
-      return newEmps;
+      return newDepts;
     });
   } catch (error) {
     console.error(error);
