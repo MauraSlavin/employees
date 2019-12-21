@@ -8,6 +8,9 @@ const cTable = require("console.table");
 // need express to have a conversation with the user on the CLI
 const inquirer = require("inquirer");
 
+// need to know whether to continue the app
+let continueApp = true;
+
 // to access my own modules
 // const sqlQueries = require("./Develop/js/sqlQueries");
 // const sqlInserts = require("./Develop/js/sqlInserts");
@@ -139,9 +142,7 @@ function insertEmployee(employee_input_obj) {
 
     // get the dept id from the departments table using the department name object
     let query = "SELECT id FROM employees WHERE ? AND ?;";
-    console.log("Query:" + query); // for testing
-    console.log("mgr_obj:"); // for testing
-    console.log(mgr_objs); // for testing
+
     connection.query(query, mgr_objs, function(err, res) {
       if (err) throw err;
       // get the id from the res (result)
@@ -198,18 +199,18 @@ function updateEmployeeRole(employee_name, new_role) {
   });
 } // end of updateemployeerole
 
-
 function updateEmployeeMgr(employee_name, new_mgr) {
   // update an employee's manager
 
   // get the new manager_id first
   // should only be one, but just in case, it'll take the first
-  query = "SELECT id FROM employees WHERE CONCAT(first_name, ' ', last_name) = ? LIMIT 1;";
+  query =
+    "SELECT id FROM employees WHERE CONCAT(first_name, ' ', last_name) = ? LIMIT 1;";
   connection.query(query, new_mgr, function(err, res) {
     if (err) throw err;
     let new_mgr_id = JSON.parse(JSON.stringify(res));
     new_mgr_id = new_mgr_id[0].id;
-   
+
     query =
       "UPDATE employees SET manager_id = ? WHERE CONCAT(first_name, ' ', last_name) = ?;";
 
@@ -221,8 +222,6 @@ function updateEmployeeMgr(employee_name, new_mgr) {
     });
   });
 } // end of updateemployeemgr
-
-
 
 // //  inserts a new department
 // const new_dept = "Inventory Control";
@@ -269,7 +268,6 @@ function whatToDo() {
   const employeeList = findEmployees();
   console.log("(In whatToDo) employeeList:");
   console.log(employeeList);
-
 
   //   const whatToDo = () => {
   const questions = [
@@ -398,7 +396,7 @@ function whatToDo() {
       ]
     },
 
-        // Asks which employee is getting a new manager (when updating the employee's manager)
+    // Asks which employee is getting a new manager (when updating the employee's manager)
     {
       type: "list",
       name: "updateEmpForNewMgr",
@@ -414,20 +412,24 @@ function whatToDo() {
         "Duane Stewart",
         "A B"
       ]
-    }, 
+    },
 
-        // Asks who the new manager is (when updating the employee's manager)
+    // Asks who the new manager is (when updating the employee's manager)
     {
       type: "list",
       name: "updateEmpNewMgr",
       message: "Who is the new manager?",
       when: actionIs("Update an employee's manager"),
       // choices: mgrs     //  ******  this isn't returning the right thing, even though it looks the same ***** //
-      choices: [
-        "Emil Pignetti",
-        "Jim Tyger",
-        "Duane Stewart"
-      ]
+      choices: ["Emil Pignetti", "Jim Tyger", "Duane Stewart"]
+    },
+
+    // Asks are you sure you want to exit?  Leaves if yes.
+    {
+      type: "confirm",
+      name: "exitApp",
+      message: "Are you sure you want to quit?",
+      when: actionIs("Exit")
     }
   ];
 
@@ -443,17 +445,11 @@ function whatToDo() {
 
       // action = whatToDo();   // commented out for testing... put back in to reiterate application
       case "View employees by department":
-        console.log("results.dept:");
-        console.log(results.dept);
-
         getEmployeesByDept(results.dept);
         displayTable();
         break;
 
       case "View employees by manager":
-        console.log("results.mgr:");
-        console.log(results.mgr);
-
         getEmployeesByMgr(results.mgr);
         displayTable();
         break;
@@ -485,9 +481,24 @@ function whatToDo() {
       case "Update an employee's title":
         updateEmployeeRole(results.updateEmpForRole, results.updateEmpRole);
         break;
-      
+
       case "Update an employee's manager":
         updateEmployeeMgr(results.updateEmpForNewMgr, results.updateEmpNewMgr);
+        break;
+
+      case "Exit":
+
+        // If the user doesn't want to leave, start over.  Otherwise, quit.
+        if (results.exitApp) {
+          // thank user
+          console.log(
+            "Thank you for using 'Employee Manager'!  Have a good day."
+          );
+          continueApp = false;
+          // close connection before leaving.
+          connection.end();
+          
+        };
         break;
 
         fault: console.log(
@@ -495,12 +506,10 @@ function whatToDo() {
         );
     } // end of switch stmt
 
-    // If the user says yes to another game, play again, otherwise quit the game
-    // if (val.choice) {
-    //   this.play();
-    // } else {
-    //   this.quit();
-    // }
+    // start again with initial menu, when task is complete.
+    if (continueApp) {
+      whatToDo();
+    };
   }); // end of .then block
 }
 // conversation.startConversation(connection);
@@ -520,17 +529,11 @@ async function findDepts() {
     await connection.query(query, function(err, res) {
       if (err) throw err;
 
-      console.log("res");
-      console.log(res);
       const depts = JSON.parse(JSON.stringify(res));
-      console.log("depts:");
-      console.log(depts);
       let newDepts = [];
       depts.forEach(function(convert) {
         newDepts.push(convert["department_name"]);
       });
-      console.log("newdepts:");
-      console.log(newDepts);
 
       return newDepts;
     });
@@ -552,14 +555,10 @@ async function findMgrs() {
       if (err) throw err;
 
       const mgrs = JSON.parse(JSON.stringify(res));
-      console.log("mgrs:");
-      console.log(mgrs);
       let newMgrs = [];
       mgrs.forEach(function(convert) {
         newMgrs.push(convert["mgr_name"]);
       });
-      console.log("newMgrs:");
-      console.log(newMgrs);
 
       return newMgrs;
     });
@@ -576,14 +575,11 @@ async function findRoles() {
       if (err) throw err;
 
       const roles = JSON.parse(JSON.stringify(res));
-      console.log("roles:");
-      console.log(roles);
+
       let newRoles = [];
       roles.forEach(function(convert) {
         newRoles.push(convert["title"]);
       });
-      console.log("newRoles:");
-      console.log(newRoles);
 
       return newRoles;
     });
@@ -600,11 +596,7 @@ async function getMgrFirstLast(manager_full_name) {
     await connection.query(query, manager_full_name, function(err, res) {
       if (err) throw err;
 
-      console.log("res");
-      console.log(res);
       const mgr_first_last = JSON.parse(JSON.stringify(res));
-      console.log("mgr_first_last:");
-      console.log(mgr_first_last[0]);
 
       return mgr_first_last[0];
     });
@@ -622,17 +614,12 @@ async function findEmployees() {
     await connection.query(query, function(err, res) {
       if (err) throw err;
 
-      console.log("res");
-      console.log(res);
       const emps = JSON.parse(JSON.stringify(res));
-      console.log("emps:");
-      console.log(emps);
+
       let newEmps = [];
       emps.forEach(function(convert) {
         newEmps.push(convert["emp_name"]);
       });
-      console.log("newEmps:");
-      console.log(newEmps);
 
       return newEmps;
     });
@@ -641,11 +628,5 @@ async function findEmployees() {
   }
 } // end of findEmployees
 
-
-
 // Ask what to do
 whatToDo();
-// console.log("action:  ", action);
-
-// ends the connection to the db
-// connection.end();
