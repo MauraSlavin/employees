@@ -64,19 +64,19 @@ function getEmployeesByDept(department) {
   getAllEmployees();
 
   // delete all employees except those in the given department
-  query = "DELETE FROM allemployees WHERE dept <> ?;";
+  query = "DELETE FROM allemployees WHERE dept <> ?  OR dept IS NULL;";
   connection.query(query, department, function(err, res) {
     if (err) throw err;
   });
 }
 
-function getEmployeesByRole(role) {
+function getEmployeesByMgr(mgr) {
   // get all employees
   getAllEmployees();
 
   // delete all employees except those in the given department
-  query = "DELETE FROM allemployees WHERE title <> ?;";
-  connection.query(query, role, function(err, res) {
+  query = "DELETE FROM allemployees WHERE manager <> ? OR manager IS NULL;";
+  connection.query(query, mgr, function(err, res) {
     if (err) throw err;
   });
 }
@@ -92,11 +92,6 @@ function displayTable() {
   });
 }
 
-// //  displays table of employees in a given role;
-// console.log("\n View Employees in a given Role:");
-// const role = "Programmer";
-// sqlQueries.getEmployeesByRole(role, connection);
-// sqlQueries.displayTable(connection);
 
 // //  inserts a new department
 // const new_dept = "Inventory Control";
@@ -147,6 +142,11 @@ function whatToDo() {
   console.log("(In whatToDo) depts:");
   console.log(depts);
 
+  // get list of managers for "View employees by manager"
+  const mgrs = findMgrs();
+  console.log("(In whatToDo) mgrs:");
+  console.log(mgrs);
+
   //   const whatToDo = () => {
   const questions = [
     // Asks initial question - what do you want to do
@@ -156,8 +156,7 @@ function whatToDo() {
       message: "What would you like to do?",
       choices: actionChoices
     },
-    // findDepts returns array of strings,
-    //   where each string has a dept_id & dept_name, so user can see name, and we can use id
+    // Asks which dept, if viewing employees by dept
     {
       type: "list",
       name: "dept",
@@ -165,6 +164,16 @@ function whatToDo() {
       when: actionIs("View employees by department"),
       // choices: depts
       choices: ['Warehouse Systems', 'Manufacturing Systems', 'Systems']
+    },
+
+    // Asks which mgr, if viewing employees by dept
+    {
+      type: "list",
+      name: "mgr",
+      message: "Which manager would you like to see the employees for?",
+      when: actionIs("View employees by manager"),
+      // choices: mgrs
+      choices: ["Emil Pignetti", "Duane Stewart", "Jim Tyger"]
     }
   ];
 
@@ -177,6 +186,7 @@ function whatToDo() {
         // sqlQueries.displayTable(connection);
         displayTable();
         break;
+
       // action = whatToDo();   // commented out for testing... put back in to reiterate application
       case "View employees by department":
         console.log("results.dept:");
@@ -185,6 +195,16 @@ function whatToDo() {
         getEmployeesByDept(results.dept);
         displayTable();
         break;
+
+      case "View employees by manager":
+        console.log("results.mgr:");
+        console.log(results.mgr);
+
+        getEmployeesByMgr(results.mgr);
+        displayTable();
+        break;
+
+
         fault: console.log(
           "not all action choices accounted for - see inquirer.then in server.js"
         );
@@ -208,18 +228,17 @@ function actionIs(action) {
   };
 }
 
-// returns an array of strings, where each string has a dept id and dept name
+// returns an array of strings, where each string is a dept name
 async function findDepts() {
-
 
   const query = "SELECT department_name FROM departments;";
   try {
     await connection.query(query, function(err, res) {
       if (err) throw err;
-      // res.forEach(id => {
+   
       console.log("res");
       console.log(res);
-      depts = JSON.parse(JSON.stringify(res));
+      const depts = JSON.parse(JSON.stringify(res));
       console.log("depts:");
       console.log(depts);
       let newDepts = [];
@@ -230,6 +249,38 @@ async function findDepts() {
       console.log(newDepts);
 
       return newDepts;
+    });
+  } catch (error) {
+    console.error(error);
+  }
+  // select table departments to get list of depts
+}  // end of findDepts
+
+
+// returns an array of strings, where each string has a dept id and dept name
+async function findMgrs() {
+
+  let query = "SELECT DISTINCT";
+  query += " CONCAT(m.first_name, ' ', m.last_name)";
+  query += " AS mgr_name";
+  query += " FROM employees e";
+  query += " INNER JOIN  employees m";
+  query += " ON e.manager_id = m.id;";
+  try {
+    await connection.query(query, function(err, res) {
+      if (err) throw err;
+
+      const mgrs = JSON.parse(JSON.stringify(res));
+      console.log("mgrs:");
+      console.log(mgrs);
+      let newMgrs = [];
+      mgrs.forEach(function(convert) {
+        newMgrs.push(convert["mgr_name"]);
+      });
+      console.log("newMgrs:");
+      console.log(newMgrs);
+
+      return newMgrs;
     });
   } catch (error) {
     console.error(error);

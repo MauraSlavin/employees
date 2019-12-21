@@ -88,8 +88,23 @@ SET       a.manager = CONCAT(e.first_name, " ", e.last_name)
 WHERE     a.manager = e.id;
 SELECT * FROM allemployees;
 
+    
+INSERT INTO allemployees 
+(id, first, last, title, dept, salary, manager)
+VALUES
+(1, "Eileen", "Slavin", "manager", "Systems", 10000, "Mom"),
+(1, "Marina", "Slavin", "manager", "Systems", 8000, "Mom"),
+(1, "Siobhan", "Young", "manager", "Systems", 6000, "Mom");
+
 SELECT * FROM departments;
 SELECT * FROM roles;
 SELECT * FROM employees;
 SELECT * FROM allemployees;
 
+SELECT DISTINCT
+CONCAT(m.first_name, ' ', m.last_name) AS mgr_name
+FROM employees e 
+INNER JOIN  employees m ON 
+	e.manager_id = m.id;
+
+DELETE FROM allemployees WHERE manager <> "Emil Pignetti" OR manager IS NULL;
