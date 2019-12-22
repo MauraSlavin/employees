@@ -7,12 +7,13 @@ const cTable = require("console.table");
 // need express to have a conversation with the user on the CLI
 const inquirer = require("inquirer");
 
+const init = require("./Develop/js/initialization");
 // lists of choices needed for inquirer (conversation with user)
-let continueApp = true;   // continuing or exiting the application
-let depts = [];           // list of department names
-let mgrs = [];            // list of managers names
-let employeeList = [];    // list of employees names
-let roles = [];           // list of job titles
+// let continueApp = true;   // continuing or exiting the application
+// let depts = [];           // list of department names
+// let mgrs = [];            // list of managers names
+// let employeeList = [];    // list of employees names
+// let roles = [];           // list of job titles
 
 // to access my own modules
 // const sqlQueries = require("./Develop/js/sqlQueries");
@@ -198,21 +199,21 @@ function whatToDo() {
   ];
 
   // get list of depts for "View employees by dept"
-  // initializes the global "depts"
+  // initializes the global "init.depts"
   findDepts();
 
   // get list of managers for "View employees by manager" & "Add an employee"
   // a manager is defined as someone who has people working for them.
   // doesn't handle the case where a new manager doesn't have anyone working for them, yet.
-  // initializes the global "mgrs"
+  // initializes the global "init.mgrs"
   findMgrs();
 
   // get list of roles (titles) for "Add an employee"
-  // initializes the global "roles"
+  // initializes the global "init.roles"
   findRoles();
 
   // get list of employees for "Remove an employee"
-  // initializes the global "employeeList"
+  // initializes the global "init.employeeList"
   findEmployees();
 
   // all the questions that the user can be asked
@@ -240,7 +241,7 @@ function whatToDo() {
       message: "Which department would you like to see?",
       // only show this question when this action is chosen
       when: actionIs("View employees by department"),  
-      choices: depts  // list of departments
+      choices: init.depts  // list of departments
     },
 
     // Asks which mgr, if viewing employees by dept
@@ -250,8 +251,7 @@ function whatToDo() {
       message: "Which manager would you like to see the employees for?",
       // only show this question when this action is chosen
       when: actionIs("View employees by manager"),
-      // choices: mgrs
-      choices: mgrs  // list of managers
+      choices: init.mgrs  // list of managers
     },
 
     // Asks employee first name, if adding an employee
@@ -279,7 +279,7 @@ function whatToDo() {
       message: "Which manager will this employee be working for?",
       // only show this question when this action is chosen
       when: actionIs("Add an employee"),
-      choices: mgrs             //  list of managers
+      choices: init.mgrs             //  list of managers
     },
 
     // Asks which role, if adding an employee
@@ -289,7 +289,7 @@ function whatToDo() {
       message: "What will be this new employee's title?",
       // only show this question when this action is chosen
       when: actionIs("Add an employee"),
-      choices: roles        // list of job titles
+      choices: init.roles        // list of job titles
     },
 
     // Asks which employee, if removing an employee
@@ -299,7 +299,7 @@ function whatToDo() {
       message: "Which employee would you like to fire?",
       // only show this question when this action is chosen
       when: actionIs("Remove an employee"),
-      choices: employeeList      // list of current employees
+      choices: init.employeeList      // list of current employees
     },
 
     // Asks which employee, and the new role, if updating an employee's role
@@ -309,7 +309,7 @@ function whatToDo() {
       message: "Which employee would you like to update the title for?",
       // only show this question when this action is chosen
       when: actionIs("Update an employee's title"),
-      choices: employeeList        // list of current employees
+      choices: init.employeeList        // list of current employees
     },
 
     // Asks which employee, and the new role, if updating an employee's role
@@ -319,7 +319,7 @@ function whatToDo() {
       message: "What is the employee's new title?",
       // only show this question when this action is chosen
       when: actionIs("Update an employee's title"),
-      choices: roles           // list of job titles
+      choices: init.roles           // list of job titles
     },
 
     // Asks which employee is getting a new manager (when updating the employee's manager)
@@ -329,7 +329,7 @@ function whatToDo() {
       message: "Which employee is getting a new manager?",
       // only show this question when this action is chosen
       when: actionIs("Update an employee's manager"),
-      choices: employeeList        // list of current employees
+      choices: init.employeeList        // list of current employees
     },
 
     // Asks who the new manager is (when updating the employee's manager)
@@ -339,7 +339,7 @@ function whatToDo() {
       message: "Who is the new manager?",
       // only show this question when this action is chosen
       when: actionIs("Update an employee's manager"),
-      choices: mgrs         // list of current managers
+      choices: init.mgrs         // list of current managers
     },
 
     // Asks are you sure you want to exit?  Leaves if yes.
@@ -394,7 +394,7 @@ function whatToDo() {
           // thank user
           console.log(
             "\nThank you for using 'Employee Manager'!  Have a good day.");
-          continueApp = false;
+          init.continueApp = false;
           // close connection before leaving.
           connection.end();
         }
@@ -405,7 +405,7 @@ function whatToDo() {
     } // end of switch stmt
 
     // start again with initial menu, when task is complete.
-    if (continueApp) {
+    if (init.continueApp) {
       whatToDo();
     }
   }); // end of .then block
@@ -423,14 +423,14 @@ function actionIs(action) {
 // returns an array of strings, where each string is a dept name
 async function findDepts() {
   // clear out from last query.
-  depts = [];
+  init.depts = [];
   const query = "SELECT department_name FROM departments;";
 
   await connection.query(query, function(err, res) {
     if (err) console.log(err);
 
     for (let i = 0; i < res.length; i++) {
-      depts.push(res[i].department_name);
+      init.depts.push(res[i].department_name);
     }
   });
 } // end of findDepts
@@ -438,7 +438,7 @@ async function findDepts() {
 // returns an array of strings, where each string has a manager name
 async function findMgrs() {
   // clear out from last query.
-  mgrs = [];
+  init.mgrs = [];
   let query = "SELECT DISTINCT";
   query += " CONCAT(m.first_name, ' ', m.last_name)";
   query += " AS mgr_name";
@@ -449,7 +449,7 @@ async function findMgrs() {
     if (err) console.log(err);
 
     for (let i = 0; i < res.length; i++) {
-      mgrs.push(res[i].mgr_name);
+      init.mgrs.push(res[i].mgr_name);
     }
   });
 } // end of findMgrs
@@ -457,14 +457,14 @@ async function findMgrs() {
 // returns an array of strings, where each string has role (or title) name
 async function findRoles() {
   // clear out from last query.
-  roles = [];
+  init.roles = [];
   let query = "SELECT DISTINCT title FROM roles;";
 
   await connection.query(query, function(err, res) {
     if (err) console.log(err);
 
     for (let i = 0; i < res.length; i++) {
-      roles.push(res[i].title);
+      init.roles.push(res[i].title);
     }
   });
 } // end of findRoles
@@ -525,7 +525,7 @@ async function insertNewEmployee(results) {
 // returns an array of strings, where each string is an employee name (first & last)
 async function findEmployees() {
   // clear out from last query.
-  employeeList = [];
+  init.employeeList = [];
   const query =
     "SELECT CONCAT(first_name, ' ', last_name) as emp_name FROM employees;";
 
@@ -533,7 +533,7 @@ async function findEmployees() {
     if (err) console.log(err);
 
     for (let i = 0; i < res.length; i++) {
-      employeeList.push(res[i].emp_name);
+      init.employeeList.push(res[i].emp_name);
     }
   });
 } // end of findEmployees
