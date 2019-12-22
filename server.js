@@ -6,20 +6,8 @@ const path = require("path");
 const cTable = require("console.table");
 // need express to have a conversation with the user on the CLI
 const inquirer = require("inquirer");
-
+// initialize global variables
 const init = require("./Develop/js/initialization");
-// lists of choices needed for inquirer (conversation with user)
-// let continueApp = true;   // continuing or exiting the application
-// let depts = [];           // list of department names
-// let mgrs = [];            // list of managers names
-// let employeeList = [];    // list of employees names
-// let roles = [];           // list of job titles
-
-// to access my own modules
-// const sqlQueries = require("./Develop/js/sqlQueries");
-// const sqlInserts = require("./Develop/js/sqlInserts");
-// const sqlUpdates = require("./Develop/js/sqlUpdates");
-// const conversation = require('./Develop/js/conversation');
 
 // set up connection to db
 const connection = mysql.createConnection({
@@ -136,7 +124,10 @@ function deleteEmployee(emp_name) {
     if (err) console.log(err);
     console.log("\n\n" + emp_name + " was successfully deleted.");
   });
-}
+
+  findEmployees();  // update employeeList 
+  findMgrs();  // update mgrs, in case a manager was deleted.
+}  // end of deleteEmployee
 
 
 // Updates an employees job title, given the employee's name and the new title name
@@ -154,6 +145,9 @@ function updateEmployeeRole(employee_name, new_role) {
     // execute the update statement
     connection.query(query, [selectRes[0].id, employee_name], function(updateErr, updateRes) {
       if (updateErr) console.log(updateErr);
+      findEmployees();   // to update init.employeeList
+      // NOTE:  no need to call findMgrs() because even if the new role is a manager,
+      //   the app doesn't recognize someone as a manager unless they have people working under them.
       // let the user know the job title was successfully updated.
       console.log("\n\n" + employee_name + "'s job title has been updated to " 
           + new_role + ".");   
@@ -174,6 +168,7 @@ function updateEmployeeMgr(employee_name, new_mgr) {
     query = "UPDATE employees SET manager_id = ? WHERE CONCAT(first_name, ' ', last_name) = ?;";
     connection.query(query, [selectRes[0].id, employee_name], function(updateErr, updateRes) {
       if (updateErr) console.log(updateErr);
+      findMgrs();   // update init.mgrs, since this will have changed.
       console.log(
         "\n\n" + employee_name + "'s manager has been updated to " + new_mgr + "."
       );
@@ -186,35 +181,7 @@ function updateEmployeeMgr(employee_name, new_mgr) {
 //   called iteratively to keep asking the user what they want to do 
 //     until they choose to exit
 function whatToDo() {
-  // choices for inquirer prompt - what can the user do?
-  const actionChoices = [
-    "View all employees",
-    "View employees by department",
-    "View employees by manager",
-    "Add an employee",
-    "Remove an employee",
-    "Update an employee's title",
-    "Update an employee's manager",
-    "Exit"
-  ];
 
-  // get list of depts for "View employees by dept"
-  // initializes the global "init.depts"
-  findDepts();
-
-  // get list of managers for "View employees by manager" & "Add an employee"
-  // a manager is defined as someone who has people working for them.
-  // doesn't handle the case where a new manager doesn't have anyone working for them, yet.
-  // initializes the global "init.mgrs"
-  findMgrs();
-
-  // get list of roles (titles) for "Add an employee"
-  // initializes the global "init.roles"
-  findRoles();
-
-  // get list of employees for "Remove an employee"
-  // initializes the global "init.employeeList"
-  findEmployees();
 
   // all the questions that the user can be asked
   //  type is the type of input expected from the user:
@@ -232,7 +199,7 @@ function whatToDo() {
       type: "list",
       name: "action",
       message: "What would you like to do?",
-      choices: actionChoices           // list of what the user can do
+      choices: init.actionChoices           // list of what the user can do
     },
     // Asks which dept, if viewing employees by dept
     {
@@ -406,7 +373,7 @@ function whatToDo() {
 
     // start again with initial menu, when task is complete.
     if (init.continueApp) {
-      whatToDo();
+      setTimeout(whatToDo, 250);
     }
   }); // end of .then block
 }
@@ -458,7 +425,7 @@ async function findMgrs() {
 async function findRoles() {
   // clear out from last query.
   init.roles = [];
-  let query = "SELECT DISTINCT title FROM roles;";
+  const query = "SELECT DISTINCT title FROM roles;";
 
   await connection.query(query, function(err, res) {
     if (err) console.log(err);
@@ -485,23 +452,24 @@ async function insertNewEmployee(results) {
   // then insert new record in database table
 
   // do query to get manager's first & last so we can get their id
-  const query =
+  let query =
     "SELECT first_name, last_name FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?";
 
   await connection.query(query, results.addMgr, function(selectFirstLastErr, selectFirstLastRes) {
     if (selectFirstLastErr) console.log(selectFirstLastErr);
 
     // get the managers's id from the employees table to put in the new record as the employee's manager id
-    let query =
+    query =
       "SELECT id FROM employees WHERE first_name = ? AND last_name = ?;";
-    connection.query(query, [selectFirstLastRes[0].first_name, selectFirstLastRes[0].last_name], function(selectIdFrEmpErr, selectIdFrEmpRes) {
+    connection.query(query, [selectFirstLastRes[0].first_name, selectFirstLastRes[0].last_name], 
+      function(selectIdFrEmpErr, selectIdFrEmpRes) {
       if (selectIdFrEmpErr) console.log(selectIdFrEmpErr);
 
       // put the manager's role id in the object to be inserted in the db for the new employee
       employee_insert_obj.manager_id = selectIdFrEmpRes[0].id;
 
       // get the role id for the employee from the roles table
-      let query = "SELECT id FROM roles WHERE title = ?;";
+      query = "SELECT id FROM roles WHERE title = ?;";
       connection.query(query, results.addRole, function(selectIdFrRolesErr, selectIdFrRolesRes) {
         if (selectIdFrRolesErr) console.log(selectIdFrRolesErr);
 
@@ -516,10 +484,15 @@ async function insertNewEmployee(results) {
           console.log("\n\nThe new employee " + 
           employee_insert_obj.first_name + " " + employee_insert_obj.last_name 
           + " has been successfully inserted.");
+          // this is done in this block to make sure INSERT query is done before list is updated.
+          findEmployees();  // update init.employeeList to make sure new employee is included.
+          
+          // no need to call findMgrs because there isn't a way to make a new employee a manager.
         });  // end of connection.query for INSERT
       });   // end of connection.query for SELECT id FROM roles
     });   // end of connection.query for SELECT id from employees
   });  // end of connection.query for SELECT first_name last_name
+
 } // end of insertnewemployee
 
 // returns an array of strings, where each string is an employee name (first & last)
@@ -537,6 +510,26 @@ async function findEmployees() {
     }
   });
 } // end of findEmployees
+
+
+
+// get list of depts for "View employees by dept"
+// initializes the global "init.depts"
+findDepts();
+
+// get list of managers for "View employees by manager" & "Add an employee"
+// a manager is defined as someone who has people working for them.
+// doesn't handle the case where a new manager doesn't have anyone working for them, yet.
+// initializes the global "init.mgrs"
+findMgrs();
+
+// get list of roles (titles) for "Add an employee"
+// initializes the global "init.roles"
+findRoles();
+
+// get list of employees for "Remove an employee"
+// initializes the global "init.employeeList"
+findEmployees();
 
 // Ask what to do
 whatToDo();
