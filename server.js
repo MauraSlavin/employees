@@ -100,85 +100,6 @@ function displayTable() {
   });
 } // end of displaytable
 
-// async function insertEmployee(employee_input_obj) {
-//   // insert a new employee
-//   console.log("employee_input_obj");
-//   console.log(employee_input_obj);
-//   // deconstruct the data we have
-//   const {
-//     first_name,
-//     last_name,
-//     role_name,
-//     manager_first,
-//     manager_last
-//   } = employee_input_obj;
-
-//   // need to create object with data needed to insert into the employees table
-//   let employee_insert_obj = {
-//     first_name: first_name,
-//     last_name: last_name,
-//     role_id: null, // to be retrieved from roles table based on role title
-//     manager_id: null // to be retrieved from the employees table from the manager name
-//   };
-
-//   // use this object to do the SQL SELECT query (to get the role id for the job title)
-//   const role_obj = {
-//     title: role_name
-//   };
-
-//   // get the dept id from the departments table using the department name object
-//   let query = "SELECT id FROM roles WHERE ?";
-//   connection.query(query, role_obj, function(err, res) {
-//     if (err) console.log(err);
-//     // get the id from the res (result)
-//     let role_id = JSON.parse(JSON.stringify(res));
-//     role_id = role_id[0].id;
-//     // replace the name in the role object to be inserted with the dept_id
-//     employee_insert_obj.role_id = role_id;
-
-//     // use this object to do the SQL SELECT query (to get the employee id for the manager)
-//     const mgr_obj_first = {
-//       first_name: manager_first
-//     };
-
-//     const mgr_obj_last = {
-//       last_name: manager_last
-//     };
-
-//     const mgr_objs = [mgr_obj_first, mgr_obj_last];
-
-//     // get the dept id from the departments table using the department name object
-//     let query = "SELECT id FROM employees WHERE ? AND ?;";
-
-//     connection.query(query, mgr_objs, function(err, res) {
-//       if (err) console.log(err);
-//       // get the id from the res (result)
-//       let mgr_id = JSON.parse(JSON.stringify(res));
-//       mgr_id = mgr_id[0].id;
-//       // replace the name in the role object to be inserted with the dept_id
-//       employee_insert_obj.manager_id = mgr_id;
-
-//       // the object is now ready to be inserted in the table.
-//       query = "INSERT INTO employees SET ?;";
-//       connection.query(query, employee_insert_obj, function(
-//         err,
-//         res
-//       ) {
-//         if (err) console.log(err);
-//       });
-
-//       console.log(
-//         "\nThe new employee " +
-//           employee_insert_obj.first_name +
-//           " " +
-//           employee_insert_obj.last_name +
-//           " has been successfully inserted."
-//       );
-//     });
-//   });
-
-//   console.log(sql);
-// }
 
 function deleteEmployee(emp_name) {
   // delete given employees
@@ -239,12 +160,12 @@ function updateEmployeeMgr(employee_name, new_mgr) {
   });
 } // end of updateemployeemgr
 
-// //  inserts a new department
+//   //  inserts a new department
 // const new_dept = "Inventory Control";
 // sqlInserts.insertDepartment(new_dept, connection);
 // console.log("\n Inserted a new department: " + new_dept + ".");
 
-//  inserts a new role
+//  //  inserts a new role
 // const new_role = {
 //   title: "Staff Programmer",
 //   salary: 120000,
@@ -410,7 +331,6 @@ function whatToDo() {
         displayTable();
         break;
 
-      // action = whatToDo();   // commented out for testing... put back in to reiterate application
       case "View employees by department":
         getEmployeesByDept(results.dept);
         displayTable();
@@ -424,25 +344,6 @@ function whatToDo() {
       // inserts a new employee
       case "Add an employee":
         insertNewEmployee(results);
-        // get the manager's first & last name from the name entered.
-        // getMgrFirstLast(results.addMgr);
-        // console.log("(case Add an employee) mgr_first_last:");
-        // console.log(mgr_first_last);
-        // *******    Promise is pending.   WWWHHHYYY??  **********  //
-        // console.log("line 435");
-        // console.log(mgr_first_last);
-        // const first_name = mgr_first_last[0].first_name;
-        // const last_name = mgr_first_last[0].last_name;
-        // // const mgr_first = "Jim";
-        // // const mgr_last = "Tyger";
-        // const employee_input_obj = {
-        //   first_name: results.addFirst,
-        //   last_name: results.addLast,
-        //   role_name: results.addRole,
-        //   manager_first: first_name,
-        //   manager_last: last_name
-        // };
-        // insertEmployee(employee_input_obj);
         break;
 
       case "Remove an employee":
@@ -543,7 +444,6 @@ async function findRoles() {
 // returns an array with two string elements, the first name and the last name
 async function insertNewEmployee(results) {
   // get manager first & last name, first
-  console.log("\nStarting insertNewEmployee."); // test
 
   // need to create object with data needed to insert into the employees table
   let employee_insert_obj = {
@@ -574,64 +474,24 @@ async function insertNewEmployee(results) {
 
       // get the role id for the employee from the roles table
       let query = "SELECT id FROM roles WHERE title = ?;";
-      console.log(
-        "Check inputs to query.  This should be the role title of the new emp:  " + results.addRole); // test
       connection.query(query, results.addRole, function(err3, res3) {
         if (err3) console.log(err3);
 
         // replace the name in the role object to be inserted with the dept_id
         employee_insert_obj.role_id = res3[0].id;
 
-        // //   Now we can insert the new employee
-        // //     insertEmployee(employee_input_obj);
-
-        console.log("employee_insert_obj:");
-        console.log(employee_insert_obj);
-
-        // the object is now ready to be inserted in the table.
+        //   Now we can have all the needed information, we can insert the new employee
         query = "INSERT INTO employees SET ?;";
         connection.query(query, employee_insert_obj, function(err4, res4) {
           if (err4) console.log(err4);
 
-          console.log(
-            "\n\nThe new employee " +
-              employee_insert_obj.first_name +
-              " " +
-              employee_insert_obj.last_name +
-              " has been successfully inserted."
+          console.log("\n\nThe new employee " + employee_insert_obj.first_name + " " + employee_insert_obj.last_name + " has been successfully inserted."
           );
         });
       });
     });
   });
 } // end of insertnewemployee
-
-// // returns an array with two string elements, the first name and the last name
-// async function getMgrFirstLast(manager_full_name) {
-//   console.log("new console.log before query");
-//   const query =
-//     "SELECT first_name, last_name FROM employees WHERE CONCAT(first_name, ' ', last_name) = ?";
-
-//   await connection.query(query, manager_full_name, function(err, res) {
-//     if (err) console.log(err);
-//     console.log("after query in getMgr...");
-//     console.log(res[0]);
-//     mgr_first_last = res[0];
-//     let first_name = mgr_first_last.first_name;
-//     let last_name = mgr_first_last.last_name;
-//     const employee_input_obj = {
-//       first_name: results.addFirst,
-//       last_name: results.addLast,
-//       role_name: results.addRole,
-//       manager_first: first_name,
-//       manager_last: last_name
-//     };
-//     console.log("at insertEmployee call");
-//     console.log(employee_input_obj);
-//     insertEmployee(employee_input_obj);
-//     // return res;
-//   });
-// } // end of getMgrFirstLast
 
 // returns an array of strings, where each string is an employee name (first & last)
 async function findEmployees() {
